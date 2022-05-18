@@ -1,0 +1,13 @@
+linaGFX KEYWORD1 linaGFX
+fb      KEYWORD1 linaGFX
+
+begin		  KEYWORD2
+end			  KEYWORD2
+width     KEYWORD2
+height    KEYWORD2
+clear     KEYWORD2
+display   KEYWORD2
+drawLine  KEYWORD2
+drawPixel KEYWORD2
+drawNum   KEYWORD2
+getFps    KEYWORD2
