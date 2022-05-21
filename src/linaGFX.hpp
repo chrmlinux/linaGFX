@@ -1,12 +1,18 @@
 //========================================
 //
 // date/author    : 2022/05/18 @chrmlinux
+// VERSION        : v0.1.0
 // LICENSE        : MIT
 //
 //========================================
 
 #ifndef __LINAGFX_HPP__
 #define __LINAGFX_HPP__
+
+#define LINA_WHITE    (B11111111)
+#define LINA_GRAY     (B01101101)
+#define LINA_DARKGRAY (B00100101)
+#define LINA_BLACK    (B00000000)
 
 #include <Arduino.h>
 
@@ -52,6 +58,24 @@ class linaGFX {
       _height = height;
       _size = _width * _height;
       _fb = new uint8_t[_size];
+      _col = LINA_WHITE;
+      _tcol = LINA_WHITE;
+      _bcol = LINA_BLACK;
+      clear(_bcol);
+      return rtn;
+    }
+
+    uint16_t begin(uint16_t width, uint16_t height, uint16_t depth, void (*func)()) {
+      uint16_t rtn = 0;
+      _width = width;
+      _height = height;
+      _size = _width * _height;
+      _fb = new uint8_t[_size];
+      _exec = func;
+      _col = LINA_WHITE;
+      _tcol = LINA_WHITE;
+      _bcol = LINA_BLACK;
+      clear(_bcol);
       return rtn;
     }
 
@@ -90,19 +114,73 @@ class linaGFX {
     //========================================
     uint16_t drawPixel(uint16_t x, uint16_t y, uint8_t col) {
       uint16_t rtn = 0;
-      uint32_t pos = y * _width + x;
-      _fb[pos] = col;
+      setDot(x, y, col);
+      if ((x < 0) || (y < 0) || (x > (_width - 1)) || (y > (_height))) return -1;
+
+      if (_exec) {
+        _exec();
+      } else {
+        uint32_t pos = y * _width + x;
+        _x = x;
+        _y = y;
+        _col = col;
+        _fb[pos] = col;
+      }
       return rtn;
+    }
+
+    //========================================
+    // setDot
+    //========================================
+    void setDot(uint16_t x, uint16_t y, int col) {
+      _x = x;
+      _y = y;
+      _col = col;
+    }
+
+    //========================================
+    // x
+    //========================================
+    uint16_t x(void) {
+      return _x;
+    }
+
+    //========================================
+    // y
+    //========================================
+    uint16_t y(void) {
+      return _y;
+    }
+
+    //========================================
+    // col
+    //========================================
+    uint16_t col(void) {
+      return _col;
+    }
+
+    //========================================
+    // tcol
+    //========================================
+    uint16_t tcol(void) {
+      return _tcol;
+    }
+
+    //========================================
+    // bcol
+    //========================================
+    uint16_t bcol(void) {
+      return _bcol;
     }
 
     //========================================
     // drawNum
     //========================================
-    void drawNum(uint16_t x, uint16_t y, uint16_t num, uint8_t col) {
+    void drawNum(uint16_t x, uint16_t y, uint16_t num, uint8_t tcol) {
       for (int h = 0; h < 8; h++) {
         for (int w = 0; w < 8; w++) {
           if (_num[num][h] & (0x80 >> w)) {
-            drawPixel(x + w, y + h, col);
+            drawPixel(x + w, y + h, tcol);
           }
         }
       }
@@ -170,16 +248,14 @@ class linaGFX {
     //========================================
     // clear
     //========================================
-    uint16_t clear() {
-      memset(_fb, _col, _size);
+    void clear() {
+      memset(_fb, _bcol, _size);
       _displayEnable = false;
-      return _displayEnable;
     }
-    uint16_t clear(uint16_t col) {
+    void clear(uint16_t bcol) {
       uint16_t rtn = 0;
-      _col = col;
-      rtn = clear();
-      return rtn;
+      _bcol = bcol;
+      clear();
     }
 
     //========================================
@@ -187,12 +263,17 @@ class linaGFX {
     //========================================
   private:
 
+    void (*_exec)() = 0x0;
     uint16_t _width = 0;
     uint16_t _height = 0;
     uint32_t _size = 0;
-    uint16_t _col = 0;
     uint16_t _depth = 8;
     uint8_t *_fb = {0};
+    uint16_t _col = 0;        // draw color
+    uint16_t _tcol = 0;       // text color
+    uint16_t _bcol = 0;       // back color
+    uint16_t _x = 0;
+    uint16_t _y = 0;
     bool _displayEnable = false;
     uint8_t _num[10][8] = {
       { // 0

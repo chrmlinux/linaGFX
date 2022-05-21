@@ -1,6 +1,5 @@
 linaGFX KEYWORD1 linaGFX
 fb      KEYWORD1 linaGFX
-
 begin		  KEYWORD2
 end			  KEYWORD2
 width     KEYWORD2
@@ -10,4 +9,9 @@ display   KEYWORD2
 drawLine  KEYWORD2
 drawPixel KEYWORD2
 drawNum   KEYWORD2
-getFps    KEYWORD2
+getfps    KEYWORD2
+x         KEYWORD2
+y         KEYWORD2
+col       KEYWORD2
+tcol      KEYWORD2
+bcol      KEYWORD2
