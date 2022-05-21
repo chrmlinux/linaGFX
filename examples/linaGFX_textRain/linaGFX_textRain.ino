@@ -5,7 +5,7 @@
 // M5StackC-Plus/M5Atom-Lite/M5StacK ..etc Models with DAC1/DAC2
 //======================================================================================
 #include <M5StickC.h>
-#define OUTPUTOSC
+//#define OUTPUTOSC
 
 //===================================================
 // https://www.arduinolibraries.info/libraries/three-d
@@ -15,7 +15,7 @@
 #include <ThreeD.hpp>
 #include "mdl.h"
 static ThreeD td;
-#define DRAW_LIMIT (1000 * 5)
+#define DRAW_LIMIT (1000 * 10)
 
 //===================================================
 // https://github.com/chrmlinux/linaGFX
@@ -25,9 +25,10 @@ static ThreeD td;
 #include <driver/dac.h>
 #include <linaGFX.hpp>
 static linaGFX fb;
-#define FB_WIDTH  (80 - 8)
-#define FB_HEIGHT (80 - 8)
+#define FB_WIDTH   (80)
+#define FB_HEIGHT  (80)
 #define FB_DEPTH   (8)
+#define FB_FSIZE   (8)
 #define LEDPIN    (10)
 uint16_t _w; // width
 uint16_t _h; // height
@@ -61,9 +62,36 @@ void grid(int col, int stp) {
 //===================================================
 // draw
 //===================================================
+//====================================================
+//
+// textRain:
+// https://qiita.com/chrmlinux03/items/c8668f2447dd61a6aabb
+//
+//====================================================
+void px(int x, int y, int h, int c) {
+  fb.drawNum(x * h, y * h, random(0, 9), c);
+}
+void textRain(int x, int y, int h) {
+  static int yp[40] = {1};
+  for (int i = 0; i < x; i++) {
+    px(i, yp[i], h, LINA_WHITE);
+    int p = 0;
+    for (int j = yp[i] - y; j < yp[i]; j++) {
+      px(i, j, h, (p << 3));
+      p++;
+    }
+    if (yp[i] > y) {
+      if (random(1000) > 975) yp[i] = 0;
+    }
+    yp[i]++;
+  }
+}
+
+//===================================================
+// draw
+//===================================================
 void draw(float fact, uint16_t mdlpt, MDL2D_T *mdl, uint16_t lnkpt, LNK_T *lnk) {
-  fb.clear(0x00);
-#ifdef OUTPUTOSC 
+#ifdef OUTPUTOSC
   fb.drawPixel((_w - 1), (_h - 1), 0xff); // trigger
 #endif
   grid(LINA_GRAY, 8);
@@ -72,8 +100,8 @@ void draw(float fact, uint16_t mdlpt, MDL2D_T *mdl, uint16_t lnkpt, LNK_T *lnk) 
     uint16_t y1 = _hh + (mdl[lnk[i].start].y * fact);
     uint16_t x2 = _hw + (mdl[lnk[i].end  ].x * fact);
     uint16_t y2 = _hh + (mdl[lnk[i].end  ].y * fact);
-    fb.drawLine(x1, y1, x2, y2, lnk[i].color ? 0xff : 0x00);
-    fb.drawNum(x1, y1, lnk[i].start, 0xff);
+    fb.drawLine(x1, y1, x2, y2, lnk[i].color ? LINA_WHITE : LINA_BLACK);
+    fb.drawNum(x1, y1, lnk[i].start, LINA_WHITE);
   }
 }
 
@@ -81,15 +109,17 @@ void draw(float fact, uint16_t mdlpt, MDL2D_T *mdl, uint16_t lnkpt, LNK_T *lnk) 
 // calDraw
 //===================================================
 void calDraw(void) {
-  float fact = 80.0F;
-  static uint16_t deg =  0;
-  uint32_t tm = micros();
+    float fact = 80.0F;
+    static uint16_t deg =  0;
+    uint32_t tm = micros();
 
-  td.rot(ROTY, deg, mdlpt,   mdl, dst3d);
-  td.rot(ROTZ,  24, mdlpt, dst3d, dst3d);
-  td.cnv(view,      mdlpt, dst3d, dst2d);
-  draw(fact, mdlpt, dst2d, lnkpt, lnk);
-  deg = (deg + 1) % 360;
+    fb.clear(LINA_BLACK);
+    textRain(_w / FB_FSIZE, _h / FB_FSIZE, FB_FSIZE);
+    td.rot(ROTY, deg, mdlpt,   mdl, dst3d);
+    td.rot(ROTZ,  24, mdlpt, dst3d, dst3d);
+    td.cnv(view,      mdlpt, dst3d, dst2d);
+    draw(fact, mdlpt, dst2d, lnkpt, lnk);
+    deg = (deg + 1) % 360;
 
 #ifdef OUTPUTOSC
   int32_t d = DRAW_LIMIT - (micros() - tm);
