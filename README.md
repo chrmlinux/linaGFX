@@ -7,3 +7,5 @@ Test version released
 -Corrected clipping processing for drawing processing, which completes support only in the drawing area.
 # v0.1.1
 textRain link
+# v0.1.2
+linaGFX_OSCOut update
